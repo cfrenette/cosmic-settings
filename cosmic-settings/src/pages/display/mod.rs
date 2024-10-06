@@ -95,6 +95,8 @@ pub enum Message {
     Resolution(usize),
     /// Set the preferred scale for a display.
     Scale(usize),
+    /// Change the scale selection mode
+    SetAdvancedScaleMode(segmented_button::Entity),
     /// Refreshes display outputs.
     Update {
         /// Available outputs from cosmic-randr.
@@ -129,6 +131,9 @@ pub struct Page {
     mirror_menu: widget::dropdown::multi::Model<String, Mirroring>,
     active_display: OutputKey,
     background_service: Option<tokio::task::JoinHandle<()>>,
+    // Basic Scale Select
+    scale_select_mode_button: cosmic::widget::segmented_button::SingleSelectModel,
+    scale_select_mode: bool,
     config: Config,
     cache: ViewCache,
     // context: Option<ContextDrawer>,
@@ -144,6 +149,15 @@ pub struct Page {
     comp_config_descale_xwayland: bool,
 }
 
+pub fn default_primary_button() -> cosmic::widget::segmented_button::SingleSelectModel {
+    let mut model = cosmic::widget::segmented_button::SingleSelectModel::builder()
+        .insert(|b| b.text(fl!("scale-select-mode", "basic")))
+        .insert(|b| b.text(fl!("scale-select-mode", "advanced")))
+        .build();
+    model.activate_position(0);
+    model
+}
+
 impl Default for Page {
     fn default() -> Self {
         let comp_config = cosmic_config::Config::new("com.system76.CosmicComp", 1).unwrap();
@@ -155,6 +169,7 @@ impl Default for Page {
 
                 false
             });
+        let mut scale_select_mode_button = default_primary_button();
 
         Self {
             list: List::default(),
@@ -173,6 +188,8 @@ impl Default for Page {
             show_display_options: true,
             comp_config,
             comp_config_descale_xwayland,
+            scale_select_mode: false,
+            scale_select_mode_button,
         }
     }
 }
@@ -470,6 +487,8 @@ impl Page {
             Message::Resolution(option) => return self.set_resolution(option),
 
             Message::Scale(scale) => return self.set_scale(scale),
+
+            Message::SetAdvancedScaleMode(option) => self.scale_select_mode = option,
 
             Message::Update { randr } => {
                 match Arc::into_inner(randr) {
@@ -1065,8 +1084,13 @@ pub fn display_configuration() -> Section<crate::pages::Message> {
                         ),
                     ),
                     widget::settings::item(
-                        &descriptions[scale],
-                        dropdown(&DPI_SCALE_LABELS, page.cache.scale_selected, Message::Scale),
+                        &descriptions[refresh_rate],
+                        cosmic::widget::segmented_control::horizontal(
+                            cosmic::widget::segmented_button::SingleSelectModel,
+                        )
+                        .minimum_button_width(0)
+                        .on_activate(|x| Message::SetAdvancedScaleMode(x)),
+                        //dropdown(&DPI_SCALE_LABELS, page.cache.scale_selected, Message::Scale),
                     ),
                     widget::settings::item(
                         &descriptions[orientation],
