@@ -361,6 +361,10 @@ display = Displays
     .resolution = Resolution
     .scale = Scale
 
+scale-select-mode = Scale Select Mode
+    .basic = Basic
+    .advanced = Advanced
+
 mirroring = Mirroring
     .id = Mirroring { $id }
     .dont = Don't mirror

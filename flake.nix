@@ -16,27 +16,22 @@
       };
     in
     {
-      devShells.${system}.default = with pkgs; nixpkgs.legacyPackages.${system}.mkShell {
+      devShells.${system}.default = nixpkgs.legacyPackages.${system}.mkShell {
         buildInputs = [
           (
             nixos-cosmic.packages.${system}.cosmic-settings.overrideAttrs (
               oldAttrs: {
+                version = "development";
                 src = ./.;
-                # cargoDeps = oldAttrs.cargoDeps.overrideAttrs {
-                #   name = "cosmic-settings-development";
-                #   src = ./.;
-                #   cargoSha256 = "";
-                # };
-                cargoHash = "";
               }
             )
           )
           (
-            rust-bin.stable.latest.default.override {
+            pkgs.rust-bin.stable.latest.default.override {
               extensions = [ "rust-src" ];
             }
           )
-          rust-analyzer
+          pkgs.rust-analyzer
         ];
       };
     };

@@ -169,7 +169,7 @@ impl Default for Page {
 
                 false
             });
-        let mut scale_select_mode_button = default_primary_button();
+        let scale_select_mode_button = default_primary_button();
 
         Self {
             list: List::default(),
@@ -488,7 +488,9 @@ impl Page {
 
             Message::Scale(scale) => return self.set_scale(scale),
 
-            Message::SetAdvancedScaleMode(option) => self.scale_select_mode = option,
+            Message::SetAdvancedScaleMode(option) => {
+                self.scale_select_mode_button.activate(option);
+            }
 
             Message::Update { randr } => {
                 match Arc::into_inner(randr) {
@@ -1052,6 +1054,7 @@ pub fn display_configuration() -> Section<crate::pages::Message> {
     let enable_label = descriptions.insert(fl!("display", "enable"));
     let options_label = descriptions.insert(fl!("display", "options"));
     let mirroring_label = descriptions.insert(fl!("mirroring"));
+    let scale_select_mode = descriptions.insert(fl!("scale-select-mode"));
 
     Section::default()
         .descriptions(descriptions)
@@ -1084,13 +1087,27 @@ pub fn display_configuration() -> Section<crate::pages::Message> {
                         ),
                     ),
                     widget::settings::item(
-                        &descriptions[refresh_rate],
+                        &descriptions[scale_select_mode],
                         cosmic::widget::segmented_control::horizontal(
-                            cosmic::widget::segmented_button::SingleSelectModel,
+                            &page.scale_select_mode_button,
                         )
                         .minimum_button_width(0)
                         .on_activate(|x| Message::SetAdvancedScaleMode(x)),
-                        //dropdown(&DPI_SCALE_LABELS, page.cache.scale_selected, Message::Scale),
+                    ),
+                    widget::settings::item(
+                        &descriptions[scale],
+                        match page.scale_select_mode {
+                            true => dropdown(
+                                &DPI_SCALE_LABELS,
+                                page.cache.scale_selected,
+                                Message::Scale,
+                            ),
+                            false => dropdown(
+                                &DPI_SCALE_LABELS,
+                                page.cache.scale_selected,
+                                Message::Scale,
+                            ),
+                        },
                     ),
                     widget::settings::item(
                         &descriptions[orientation],
