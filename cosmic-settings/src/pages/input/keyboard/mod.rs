@@ -505,12 +505,13 @@ impl Page {
     }
 
     pub fn add_input_source_view(&self) -> Element<'_, crate::pages::Message> {
+        let space_l = theme::active().cosmic().spacing.space_l;
+
         let search = widget::search_input(fl!("type-to-search"), &self.input_source_search)
             .on_input(Message::InputSourceSearch)
             .on_clear(Message::InputSourceSearch(String::new()));
 
-        let toggler = widget::toggler(
-            fl!("show-extended-input-sources"),
+        let toggler = settings::item::builder(fl!("show-extended-input-sources")).toggler(
             self.show_extended_input_sources,
             Message::SetShowExtendedInputSources,
         );
@@ -529,7 +530,7 @@ impl Page {
 
         widget::column()
             .padding([2, 0])
-            .spacing(32)
+            .spacing(space_l)
             .push(search)
             .push(toggler)
             .push(list)
@@ -577,8 +578,13 @@ impl Page {
 
         // TODO description, layout default
 
-        let mut list =
-            cosmic::widget::list_column().add(special_char_radio_row("None", None, current));
+        let mut list = cosmic::widget::list_column();
+
+        if matches!(special_key, SpecialKey::CapsLock) {
+            list = list.add(special_char_radio_row("Caps Lock", None, current));
+        } else {
+            list = list.add(special_char_radio_row("None", None, current));
+        }
 
         list = options
             .iter()
